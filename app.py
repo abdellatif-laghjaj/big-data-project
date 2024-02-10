@@ -8,7 +8,6 @@ from datetime import date
 from utils.constants import navigation_icons, navigations_labels
 from views import dashboard, processed_data, media, about
 
-
 # Set page layout to wide
 st.set_page_config(layout="wide", page_title="Emotion and Object Detection")
 
