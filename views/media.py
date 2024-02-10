@@ -115,7 +115,6 @@ def process_webcam_frame(frame):
         probability_satisfied = 0
 
     # Display the metrics
-    # Display the metrics
     metrics_cols = st.columns(3)
     with metrics_cols[0]:
         ui.metric_card(key=f"total_men_card{uuid.uuid4()}", title="Total Men", content=str(total_men),
