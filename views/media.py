@@ -6,7 +6,6 @@ import streamlit as st
 import streamlit_shadcn_ui as ui
 import hydralit_components as hc
 from PIL import Image
-from deepface import DeepFace
 from utils.filters import apply_gaussian_blur, convert_to_grayscale, equalize_histogram
 from utils.hdfs import save_image_to_hdfs
 
