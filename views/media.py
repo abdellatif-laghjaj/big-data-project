@@ -6,13 +6,49 @@ import streamlit as st
 import streamlit_shadcn_ui as ui
 import hydralit_components as hc
 from PIL import Image
-from deepface import DeepFace
 from utils.filters import apply_gaussian_blur, convert_to_grayscale, equalize_histogram
 from utils.hdfs import save_image_to_hdfs
 
 from deepface import DeepFace
 
 
+@st.cache_data()
+def calculate_metrics(results):
+    total_women = sum(1 for result in results if result[0]['dominant_gender'] == 'Woman')
+    total_men = sum(1 for result in results if result[0]['dominant_gender'] == 'Man')
+    total_students = len(results)
+    satisfied_students = sum(1 for result in results if result[0]['dominant_emotion'] in ['happy', 'neutral'])
+
+    try:
+        probability_satisfied = (satisfied_students / total_students) * 100
+    except ZeroDivisionError:
+        probability_satisfied = 0
+
+    return total_women, total_men, total_students, probability_satisfied
+
+
+@st.cache_data()
+def display_metrics(total_women, total_men, total_students, probability_satisfied):
+    st.subheader("Metrics")
+
+    placeholder = st.empty()
+    t_men_col, t_women_col, t_students_col = st.columns(3)
+
+    with placeholder.container():
+        t_men_col.metric(label="Total Men", value=total_men, delta=0)
+        t_women_col.metric(label="Total Women", value=total_women, delta=0)
+        t_students_col.metric(label="Total Students", value=total_students, delta=0)
+
+        # Display the probability using st.success or st.error
+        if probability_satisfied > 70:
+            st.success(
+                f"The majority of students seem to be satisfied, with a probability of {probability_satisfied:.2f}%")
+        else:
+            st.error(
+                f"The majority of students seem to be not satisfied, with a probability of {probability_satisfied:.2f}%")
+
+
+# Function to detect emotions in a frame
 def detect_emotions(frame):
     # Detect faces, gender, and emotion
     results = DeepFace.analyze(frame, actions=['emotion', 'gender'])
@@ -79,23 +115,20 @@ def detect_emotions(frame):
     return frame_rgb
 
 
+# Function to process the webcam frame
 def process_webcam_frame(frame):
-    # Detect faces using Haar Cascade
     face_cascade = cv2.CascadeClassifier('./haarcascades/haarcascade_frontalface_default.xml')
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = face_cascade.detectMultiScale(gray, 1.1, 4)
 
-    # Detect gender and emotions for each face
     results = []
     for (x, y, w, h) in faces:
         cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 3)
 
-        # Analyze gender and emotion
         face_roi = frame[y:y + h, x:x + w]
         result = DeepFace.analyze(img_path=face_roi, actions=['emotion', 'gender'], enforce_detection=False)
         results.append(result)
 
-        # Display results on the frame
         emotion_info = result[0]['emotion']
         gender_info = result[0]['gender']
 
@@ -105,48 +138,9 @@ def process_webcam_frame(frame):
         cv2.putText(frame, f"Emotion: {dominant_emotion}, Gender: {dominant_gender}",
                     (x + 5, y - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2, cv2.LINE_AA)
 
-    # Calculate metrics
-    total_women = sum(1 for result in results if result[0]['dominant_gender'] == 'Woman')
-    total_men = sum(1 for result in results if result[0]['dominant_gender'] == 'Man')
-    total_students = len(results)
-    satisfied_students = sum(1 for result in results if result[0]['dominant_emotion'] in ['happy', 'neutral'])
-    try:
-        probability_satisfied = (satisfied_students / total_students) * 100
-    except ZeroDivisionError:
-        probability_satisfied = 0
+    total_women, total_men, total_students, probability_satisfied = calculate_metrics(results)
 
-    # Display the metrics
-    # Display the metrics
-    metrics_cols = st.columns(3)
-    with metrics_cols[0]:
-        ui.metric_card(key=f"total_men_card{uuid.uuid4()}", title="Total Men", content=str(total_men),
-                       description="Total number of men detected")
-    with metrics_cols[1]:
-        ui.metric_card(key=f"total_women_card{uuid.uuid4()}", title="Total Women", content=str(total_women),
-                       description="Total number of women detected")
-    with metrics_cols[2]:
-        ui.metric_card(key=f"total_students_card{uuid.uuid4()}", title="Total Students", content=str(total_students),
-                       description="Total number of students")
-    # Display the probability
-    status = {
-        "title": "Student Satisfaction",
-        "content": f"The majority of students seem to be {'' if probability_satisfied > 70 else 'not '}satisfied, with a probability of {probability_satisfied:.2f}%",
-        "sentiment": 'good' if probability_satisfied > 70 else 'bad',
-        "bar_value": probability_satisfied
-    }
-
-    hc.info_card(
-        title=status['title'],
-        content=status['content'],
-        sentiment=status['sentiment'],
-        bar_value=status['bar_value'],
-        title_text_size='1.5em',
-        content_text_size='1.3em',
-        icon_size='1.5em',
-        key=f"student_satisfaction_card{uuid.uuid4()}"
-    )
-
-    return frame
+    return total_women, total_men, total_students, probability_satisfied, frame
 
 
 def init():
@@ -186,21 +180,23 @@ def init():
     elif mode == "Webcam":
         st.write("Starting Webcam...")
         video_placeholder = st.empty()
+        metrics_placeholder = st.empty()
         cap = cv2.VideoCapture(0)
         stop_button = st.button("Stop")
+
+        total_women, total_men, total_students, probability_satisfied = 0, 0, 0, 0
 
         while True:
             ret, frame = cap.read()
             if not ret:
                 break
 
-            # Process webcam frame
-            processed_frame = process_webcam_frame(frame)
-
-            # Update the placeholder with the new frame
+            total_women, total_men, total_students, probability_satisfied, processed_frame = process_webcam_frame(frame)
             video_placeholder.image(processed_frame, channels="BGR", use_column_width=True)
 
-            # Break the loop if 'Stop' button is pressed
             if stop_button:
                 break
+
+            with metrics_placeholder.container():
+                display_metrics(total_women, total_men, total_students, probability_satisfied)
         cap.release()
