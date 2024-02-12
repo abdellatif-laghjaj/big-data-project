@@ -172,7 +172,10 @@ def process_webcam_frame(frame):
 
 
 def init():
-    st.title("Image and Video Processing App")
+    st.title("Process Media")
+
+    # Sidebar header
+    st.sidebar.title("VisioCraft")
 
     # Sidebar select option
     mode = st.sidebar.selectbox("Choose Mode", ["Image", "Video", "Webcam"])
