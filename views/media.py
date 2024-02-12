@@ -115,6 +115,33 @@ def detect_emotions(frame):
     return frame_rgb
 
 
+# Function to process the video
+def process_video(video_path):
+    cap = cv2.VideoCapture(video_path)
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+    st.write(f"Processing {total_frames} frames...")
+
+    video_placeholder = st.empty()
+    metrics_placeholder = st.empty()
+    stop_button = st.button("Stop")
+
+    total_women, total_men, total_students, probability_satisfied = 0, 0, 0, 0
+
+    while True:
+        ret, frame = cap.read()
+        if not ret or stop_button:
+            break
+
+        total_women, total_men, total_students, probability_satisfied, processed_frame = process_webcam_frame(frame)
+        video_placeholder.image(processed_frame, channels="BGR", use_column_width=True)
+
+        with metrics_placeholder.container():
+            display_metrics(total_women, total_men, total_students, probability_satisfied)
+
+    cap.release()
+
+
 # Function to process the webcam frame
 def process_webcam_frame(frame):
     face_cascade = cv2.CascadeClassifier('./haarcascades/haarcascade_frontalface_default.xml')
@@ -174,8 +201,14 @@ def init():
             save_image_to_hdfs(blurred_image, '/processed_images', 'blurred')
 
     elif mode == "Video":
-        # TODO: Implement video processing
-        pass
+        uploaded_video = st.file_uploader("Choose a video file", type=["mp4"])
+        if uploaded_video is not None:
+            # Save the video file
+            video_path = f"./videos/{uploaded_video.name}"
+            with open(video_path, "wb") as video_file:
+                video_file.write(uploaded_video.read())
+
+            process_video(video_path)
 
     elif mode == "Webcam":
         st.write("Starting Webcam...")
