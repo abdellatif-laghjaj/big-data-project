@@ -196,7 +196,6 @@ def init():
 
             # Processed Images List
             processed_images = []
-            labels = []
 
             # Check if None or All Filters are selected
             if "Apply All Filters" in selected_filters:
