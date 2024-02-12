@@ -1,5 +1,4 @@
 import uuid
-
 import cv2
 import numpy as np
 import streamlit as st
@@ -8,7 +7,6 @@ import hydralit_components as hc
 from PIL import Image
 from utils.filters import apply_gaussian_blur, convert_to_grayscale, equalize_histogram
 from utils.hdfs import save_image_to_hdfs
-
 from deepface import DeepFace
 
 
