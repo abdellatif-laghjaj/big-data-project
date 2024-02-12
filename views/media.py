@@ -5,7 +5,10 @@ import streamlit as st
 import streamlit_shadcn_ui as ui
 import hydralit_components as hc
 from PIL import Image
-from utils.filters import apply_gaussian_blur, convert_to_grayscale, equalize_histogram
+from utils.filters import apply_gaussian_blur, convert_to_grayscale, equalize_histogram, apply_laplacian, \
+    apply_sobel_filter, apply_bilateral_filter, apply_median_filter, remove_blur_effect, crop_image, open_image, \
+    zoom_image, close_image, erode_image, dilate_image, resize_image, rotate_image, sharpen_image, detect_edges, \
+    enhance_rgb_quality, adjust_brightness, wiener
 from utils.hdfs import save_image_to_hdfs
 from deepface import DeepFace
 
@@ -177,26 +180,103 @@ def init():
     if mode == "Image":
         uploaded_file = st.file_uploader("Choose an image file", type=["jpg", "jpeg", "png"])
         if uploaded_file is not None:
+            # Multi-select sidebar for filters
+            selected_filters = st.sidebar.multiselect("Select Filters",
+                                                      ["Apply All Filters", "Grayscale", "Equalized", "Blurred",
+                                                       "Laplacian", "Sobel",
+                                                       "Sharpen", "Enhance RGB", "Remove Blur", "Median", "Brightness",
+                                                       "Rotation", "Crop", "Resize", "Zoom", "Edge Detection",
+                                                       "Dilation", "Erosion", "Opening", "Closing", "Bilateral Filter"],
+                                                      default=["Apply All Filters"])
+
             # Process the uploaded image
             image = Image.open(uploaded_file).convert("RGB")
             image_np = np.array(image)
             st.image(image_np, caption="Uploaded Image", use_column_width=True)
 
+            # Processed Images List
+            processed_images = []
+            labels = []
+
+            # Check if None or All Filters are selected
+            if "Apply All Filters" in selected_filters:
+                selected_filters = ["Grayscale", "Equalized", "Blurred", "Laplacian", "Sobel", "Sharpen", "Enhance RGB",
+                                    "Remove Blur", "Median", "Brightness", "Rotation", "Crop", "Resize", "Zoom",
+                                    "Edge Detection", "Dilation", "Erosion", "Opening", "Closing", "Bilateral Filter"]
+
             # Apply image processing functions
-            grayscale_image = convert_to_grayscale(image_np)
-            equalized_image = equalize_histogram(image_np)
-            blurred_image = apply_gaussian_blur(image_np)
+            if "Grayscale" in selected_filters:
+                grayscale_image = convert_to_grayscale(image_np)
+                processed_images.append(grayscale_image)
+            if "Equalized" in selected_filters:
+                equalized_image = equalize_histogram(image_np)
+                processed_images.append(equalized_image)
+            if "Blurred" in selected_filters:
+                blurred_image = apply_gaussian_blur(image_np)
+                processed_images.append(blurred_image)
+            if "Laplacian" in selected_filters:
+                laplacian_image = apply_laplacian(image_np)
+                processed_images.append(laplacian_image)
+            if "Sobel" in selected_filters:
+                sobel_image = apply_sobel_filter(image_np)
+                processed_images.append(sobel_image)
+            if "Sharpen" in selected_filters:
+                sharpened_image = sharpen_image(image_np)
+                processed_images.append(sharpened_image)
+            if "Enhance RGB" in selected_filters:
+                enhanced_image = enhance_rgb_quality(image_np)
+                processed_images.append(enhanced_image)
+            if "Remove Blur" in selected_filters:
+                removed_blur_image = remove_blur_effect(image_np)
+                processed_images.append(removed_blur_image)
+            if "Median" in selected_filters:
+                median_image = apply_median_filter(image_np)
+                processed_images.append(median_image)
+            if "Brightness" in selected_filters:
+                brightened_image = adjust_brightness(image_np)
+                processed_images.append(brightened_image)
+            if "Rotation" in selected_filters:
+                rotated_image = rotate_image(image_np)
+                processed_images.append(rotated_image)
+            if "Crop" in selected_filters:
+                cropped_image = crop_image(image_np, 100, 100, 300, 300)
+                processed_images.append(cropped_image)
+            if "Resize" in selected_filters:
+                height = st.sidebar.slider("Select new height", 10, 1000, image_np.shape[0], key="resize_height")
+                width = st.sidebar.slider("Select new width", 10, 1000, image_np.shape[1], key="resize_width")
+                new_width, new_height = int(width), int(height)
+                resized_image = resize_image(image_np, new_width, new_height)
+                processed_images.append(resized_image)
+            if "Zoom" in selected_filters:
+                zoomed_image = zoom_image(image_np)
+                processed_images.append(zoomed_image)
+            if "Edge Detection" in selected_filters:
+                edge_detected_image = detect_edges(image_np)
+                processed_images.append(edge_detected_image)
+            if "Dilation" in selected_filters:
+                dilated_image = dilate_image(image_np)
+                processed_images.append(dilated_image)
+            if "Erosion" in selected_filters:
+                eroded_image = erode_image(image_np)
+                processed_images.append(eroded_image)
+            if "Opening" in selected_filters:
+                opened_image = open_image(image_np)
+                processed_images.append(opened_image)
+            if "Closing" in selected_filters:
+                closed_image = close_image(image_np)
+                processed_images.append(closed_image)
+            if "Bilateral Filter" in selected_filters:
+                bilateral_image = apply_bilateral_filter(image_np)
+                processed_images.append(bilateral_image)
 
             # Display processed images in a grid
             st.subheader("Processed Images")
             st.image(detect_emotions(image_np), channels="BGR", use_column_width=True)
-            st.image([grayscale_image, equalized_image, blurred_image], caption=["Grayscale", "Equalized", "Blurred"],
-                     width=270)
+            st.image(processed_images, selected_filters, width=270)
 
             # Save processed images to HDFS
-            save_image_to_hdfs(grayscale_image, '/processed_images', 'grayscale')
-            save_image_to_hdfs(equalized_image, '/processed_images', 'equalized')
-            save_image_to_hdfs(blurred_image, '/processed_images', 'blurred')
+            for i, processed_image in enumerate(processed_images):
+                save_image_to_hdfs(processed_image, '/processed_images', f'processed_{i}')
 
     elif mode == "Video":
         uploaded_video = st.file_uploader("Choose a video file", type=["mp4"])
@@ -214,8 +294,6 @@ def init():
         metrics_placeholder = st.empty()
         cap = cv2.VideoCapture(0)
         stop_button = st.button("Stop")
-
-        total_women, total_men, total_students, probability_satisfied = 0, 0, 0, 0
 
         while True:
             ret, frame = cap.read()
