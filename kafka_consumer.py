@@ -5,10 +5,6 @@ import uuid
 # Kafka Consumer
 consumer = KafkaConsumer('video_topic', bootstrap_servers='localhost:9092')
 
-# print("Waiting for messages...")
-# for message in consumer:
-#     print("Received message: ", message)
-
 # HDFS Client
 hdfs_client = InsecureClient('http://localhost:9870', user='hdfs')
 
