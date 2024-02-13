@@ -1,9 +1,15 @@
 import os
+import subprocess
 from pyspark.sql import SparkSession
 from hdfs import InsecureClient
 import cv2
 import tempfile
 import uuid
+
+# Create a Spark session
+spark = SparkSession.builder \
+        .appName("VisionCraft") \
+        .getOrCreate()
 
 def save_image_to_hdfs(image, target_dir, operation_type, filename_prefix='result'):
     """
@@ -39,3 +45,16 @@ def save_image_to_hdfs(image, target_dir, operation_type, filename_prefix='resul
             hdfs_file.write(local_file.read())
 
     return saved_filename
+
+# Function to list files in HDFS directory
+def list_files_in_hdfs(directory):
+    proc = subprocess.Popen(['hdfs', 'dfs', '-ls', directory], stdout=subprocess.PIPE)
+    output = proc.communicate()[0].decode('utf-8')  # Decode bytes to string
+    files = []
+    for line in output.split('\n'):
+        parts = line.split()
+        # print(parts)
+
+        if len(parts) > 7:
+            files.append(parts[7])
+    return files
