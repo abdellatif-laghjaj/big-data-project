@@ -1,7 +1,6 @@
 from kafka import KafkaConsumer
 from hdfs import InsecureClient
 import uuid
-
 # Kafka Consumer
 consumer = KafkaConsumer('video_topic', bootstrap_servers='localhost:9092')
 

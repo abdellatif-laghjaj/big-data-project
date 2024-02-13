@@ -1,6 +1,5 @@
 from kafka import KafkaProducer
 import requests
-
 # Videos links list
 videos = [
     "https://www.pexels.com/download/video/5198159",
@@ -10,15 +9,12 @@ videos = [
     "https://www.pexels.com/download/video/8419341/",
     "https://www.pexels.com/download/video/8198511/",
 ]
-
 # Kafka Producer
 producer = KafkaProducer(bootstrap_servers='localhost:9092', max_request_size=115343360)
-
 def download_and_send(url):
     try:
         print(f"Downloading video from {url}")
         response = requests.get(url)
-
         if response.status_code == 200:
             print(f"Sending video to Kafka topic")        
             producer.send('video_topic', response.content)
@@ -28,10 +24,8 @@ def download_and_send(url):
             producer.flush()
         else:
             print(f"Failed to download video from {url}, status code: {response.status_code}")
-    
     except Exception as e:
         print(f"Error downloading/sending video: {e}")
-
 # Download and send videos
 for video in videos:
     download_and_send(video)
