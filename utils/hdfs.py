@@ -58,3 +58,12 @@ def list_files_in_hdfs(directory):
         if len(parts) > 7:
             files.append(parts[7])
     return files
+
+def list_hdfs_content(directory):
+    proc = subprocess.Popen(['hdfs', 'dfs', '-ls', directory], stdout=subprocess.PIPE)
+    output = proc.communicate()[0].decode('utf-8')  # Decode bytes to string
+    files = []
+    for line in output.split('\n'):
+        parts = line.split()
+        files.append(parts)
+    return files
