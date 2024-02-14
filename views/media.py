@@ -366,13 +366,16 @@ def init():
                 st.image(detect_emotions(frame), channels="BGR", use_column_width=True)
 
             # Apply image processing functions
-            processed_frames, captions = [process_image(frame, selected_filters) for frame in frames]
+            processed_frames = []
+            for frame in frames:
+                processed_images, captions = process_image(frame, selected_filters)
+                processed_frames.append(processed_images)
 
             # Generate captions for the processed frames
             captions = []
             for i in range(frames_number):
                 for filter in selected_filters:
-                    captions.append(f"Frame {i + 1} - {filter}")
+                    captions.append(f"Frame {i + 1} - {filter}") 
 
             # Display processed frames in a grid
             st.subheader("Processed Frames")
