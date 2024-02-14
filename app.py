@@ -6,7 +6,7 @@ import streamlit as st
 from streamlit_option_menu import option_menu
 from datetime import date
 from utils.constants import navigation_icons, navigations_labels
-from views import dashboard, processed_data, media, about
+from views import dashboard, media, about
 
 # Set page layout to wide
 st.set_page_config(layout="wide", page_title="Emotion and Object Detection")
@@ -17,9 +17,6 @@ selected = option_menu(None, navigations_labels, icons=navigation_icons, default
 # Main content
 if selected == "Dashboard":
     dashboard.init()
-
-if selected == "Processed Data":
-    processed_data.init()
 
 if selected == "Media":
     media.init()
