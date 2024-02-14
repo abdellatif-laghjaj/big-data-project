@@ -18,7 +18,6 @@ def init():
         - **Filters and Enhancements:** Choose from a diverse set of filters, including Laplacian, Sobel, Sharpen, Enhance RGB quality, Remove Blur effect, Median filter, and more.
         - **Saving processed content:** Save processed images and videos to **HDFS**.
         - **Clean dashboard:** Show  the details of the processed content and the metrics of the processed content.
-        - **Browse processed data:** Browse the processed data icluding recent images..etc.
         - **Modern UI:** A sleek and intuitive user interface that makes image and video processing a breeze.
 
         ### Metrics and Insights:

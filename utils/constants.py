@@ -1,7 +1,7 @@
 navigation_icons = [
-    'bar-chart-line-fill', 'database-fill-check', 'image', 'info-circle',
+    'bar-chart-line-fill', 'image', 'info-circle',
 ]
 
 navigations_labels = [
-    "Dashboard", "Processed Data", "Media", "About",
+    "Dashboard", "Media", "About",
 ]
