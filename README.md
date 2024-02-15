@@ -42,17 +42,23 @@ Feel free to explore, experiment, and enjoy the visual transformations powered b
 
 1. Clone the repository:
 
-````bash
+```bash
 git clone https://github.com/abdellatif-laghjaj/big-data-project
 cd project
+```
 
 2. Install the required dependencies:
 
 ```bash
 pip install -r requirements.txt
+```
 
 ## Usage
 
 ```bash
 streamlit run app.py --server.runOnSave true
-````
+```
+
+## Contributing
+
+Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
